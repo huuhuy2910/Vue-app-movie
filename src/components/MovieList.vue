@@ -1,69 +1,85 @@
 <template>
   <div>
-    <h1>Danh Sách Anime</h1>
+    <h1 class="text-center my-4">Danh Sách Anime</h1>
     <div class="container">
-      <div class="filter-section">
-        <select v-model="selectedCategory" @change="applyFilters">
-          <option value="">Tất cả thể loại</option>
-          <option v-for="category in categories" :key="category.slug" :value="category.slug">
-            {{ category.name }}
-          </option>
-        </select>
-        <select v-model="selectedYear" @change="applyFilters">
-          <option value="">Tất cả năm</option>
-          <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-        </select>
-        <select v-model="selectedCountry" @change="applyFilters">
-          <option value="">Tất cả quốc gia</option>
-          <option v-for="country in countries" :key="country.slug" :value="country.slug">
-            {{ country.name }}
-          </option>
-        </select>
-        <select v-model="selectedType" @change="applyFilters">
-          <option value="">Tất cả loại phim</option>
-          <option value="series">Phim bộ</option>
-          <option value="single">Phim lẻ</option>
-          <option value="hoathinh">Hoạt hình</option>
-          <option value="tvshows">TV Shows</option>
-        </select>
+      <!-- Filter Section -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <select v-model="selectedCategory" @change="applyFilters" class="form-select">
+            <option value="">Tất cả thể loại</option>
+            <option v-for="category in categories" :key="category.slug" :value="category.slug">
+              {{ category.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select v-model="selectedYear" @change="applyFilters" class="form-select">
+            <option value="">Tất cả năm</option>
+            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select v-model="selectedCountry" @change="applyFilters" class="form-select">
+            <option value="">Tất cả quốc gia</option>
+            <option v-for="country in countries" :key="country.slug" :value="country.slug">
+              {{ country.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select v-model="selectedType" @change="applyFilters" class="form-select">
+            <option value="">Tất cả loại phim</option>
+            <option value="series">Phim bộ</option>
+            <option value="single">Phim lẻ</option>
+            <option value="hoathinh">Hoạt hình</option>
+            <option value="tvshows">TV Shows</option>
+          </select>
+        </div>
       </div>
-      
-      <div class="search-bar">
+
+      <!-- Search Bar -->
+      <div class="input-group mb-4">
         <input
           v-model="searchQuery"
           type="text"
+          class="form-control"
           placeholder="Tìm kiếm phim..."
           @input="debounceSearch"
         >
-        <button @click="searchMovies" class="search-button">
+        <button @click="searchMovies" class="btn btn-primary">
           <i class="bi bi-search"></i>
         </button>
       </div>
 
-      <div v-if="loading" class="loading">Đang tải dữ liệu...</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <!-- Loading & Error -->
+      <div v-if="loading" class="text-center my-4">Đang tải dữ liệu...</div>
+      <div v-if="error" class="text-danger text-center my-4">{{ error }}</div>
 
-      <div v-if="movies.length > 0" class="movie-list">
-        <div v-for="(movie, index) in movies" :key="index" class="movie-card card">
-          <img :src="getMovieImage(movie)" :alt="movie.name" class="card-img-top movie-thumb" />
-          <div class="card-body">
-            <h5 class="card-title">{{ movie.name }}</h5>
-            <p class="card-text">{{ movie.description }}</p>
-            <router-link class="btn btn-custom" :to="`/movie/${movie.slug}`">Xem phim</router-link>
-          </div>
-        </div>
+<!-- Movie List -->
+<div v-if="movies.length > 0" class="row row-cols-2 row-cols-sm-2 row-cols-md-4 g-4">
+  <div v-for="(movie, index) in movies" :key="index" class="col">
+    <div class="card h-100">
+      <img :src="getMovieImage(movie)" :alt="movie.name" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">{{ movie.name }}</h5>
+        <p class="card-text">{{ movie.description }}</p>
+        <router-link class="btn btn-primary" :to="`/movie/${movie.slug}`">Xem phim</router-link>
       </div>
+    </div>
+  </div>
+</div>
 
-      <div v-if="!loading && movies.length === 0" class="no-movies">
-        Không có phim nào.
-      </div>
 
-      <div v-if="!isSearching" class="pagination">
-        <button @click="fetchMovies(currentPage - 1)" :disabled="currentPage === 1">Trang trước</button>
+      <!-- No Movies Message -->
+      <div v-if="!loading && movies.length === 0" class="text-center my-4">Không có phim nào.</div>
+
+      <!-- Pagination -->
+      <div v-if="!isSearching" class="d-flex justify-content-center my-4">
+        <button @click="fetchMovies(currentPage - 1)" class="btn btn-secondary mx-1" :disabled="currentPage === 1">Trang trước</button>
         <span v-for="page in getPaginationButtons()" :key="page">
-          <button @click="fetchMovies(page)" :class="{ active: page === currentPage }">{{ page }}</button>
+          <button @click="fetchMovies(page)" :class="{ 'btn-primary': page === currentPage, 'btn-secondary': page !== currentPage }" class="btn mx-1">{{ page }}</button>
         </span>
-        <button @click="fetchMovies(currentPage + 1)" :disabled="currentPage === totalPages">Trang sau</button>
+        <button @click="fetchMovies(currentPage + 1)" class="btn btn-secondary mx-1" :disabled="currentPage === totalPages">Trang sau</button>
       </div>
     </div>
   </div>
@@ -212,149 +228,16 @@ countries: [
 };
 </script>
 <style scoped>
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 16px;
+.card-img-top {
+    width: 100%; /* Đảm bảo ảnh chiếm toàn bộ chiều rộng của card */
+    height: 400px; /* Chiều cao cố định cho tất cả các hình ảnh */
+    object-fit: cover; /* Đảm bảo ảnh được cắt bớt để giữ tỉ lệ */
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
+@media (max-width: 768px) { /* Sửa lại cú pháp media query */
+    .card-img-top {
+        height: 250px; /* Chiều cao cố định cho tất cả các hình ảnh trên màn hình nhỏ */
+    }
 }
 
-.search-bar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.search-bar input {
-  width: 300px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
-  font-size: 16px;
-}
-
-.search-button {
-  padding: 10px 15px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.search-button i {
-  font-size: 20px; /* Kích thước của icon */
-}
-
-.search-button:hover {
-  background-color: #0056b3;
-}
-
-.loading, .error, .no-movies {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.movie-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: space-between;
-}
-
-.movie-card {
-  flex: 0 0 calc(24% - 16px);
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.movie-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.movie-thumb {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-}
-
-.card-body {
-  padding: 16px;
-}
-
-.card-title {
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-.card-text {
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.btn-custom {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  text-align: center;
-  text-decoration: none;
-  transition: background-color 0.3s;
-}
-
-.btn-custom:hover {
-  background-color: #0056b3;
-}
-
-.pagination {
-  margin-top: 16px;
-  text-align: center;
-}
-
-.pagination button {
-  margin: 0 8px;
-  padding: 8px 12px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.pagination button:hover {
-  background-color: #e0e0e0;
-}
-
-.pagination button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.pagination button.active {
-  background-color: #007bff;
-  color: white;
-}.filter-section {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.filter-section select {
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
 </style>
